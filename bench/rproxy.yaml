@@ -1,0 +1,8 @@
+listen:
+  - "0.0.0.0:8083"
+workers: "auto"
+backend_pool_size: 64
+balance: roundrobin
+default:
+  - host: 192.168.88.251:8080
+log_level: debug

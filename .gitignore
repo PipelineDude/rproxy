@@ -1,0 +1,41 @@
+/target
+*.tar.gz
+haproxy-*/
+bombardier
+dummy_backend
+dummy_backend_c
+*.log
+*.pem
+
+# local scratch / AI-patching helpers
+patch_*.py
+rewrite_*.py
+
+# audit3 verification helpers
+audit3_backend
+audit3_backend.py
+
+# benchmarking: wrk is an external upstream clone (~500M), not project source
+/bench/wrk/
+
+# QA / audit-process scratch (REVIEW-NOTES-2 §1.3). These are working documents
+# and one-off artifacts, not project source; keeping them out of the tree index
+# stops `git add -A` from sweeping them into a commit by accident. Existing
+# tracked copies are left alone (gitignore does not untrack); remove them from
+# the index explicitly if they should stop being tracked.
+_qa_*/
+AUDIT*.md
+*audit*.md
+DOC_RISKS.md
+FINDINGS.md
+OPTIMIZATION_TASKS.md
+PERFORMANCE_ANALYSIS.md
+TASKS.md
+TODO.md
+CLAUDE.md
+AGENTS.md
+SECURITY_AUDIT*.md
+FULL_ANALYSIS.md
+audit*.log
+full_diff.patch
+patch.py

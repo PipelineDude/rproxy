@@ -1,0 +1,73 @@
+[package]
+name = "rproxy"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.37", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+regex = "1.10"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+rand = "0.8"
+bytes = "1.5"
+http = "1.1"
+url = "2.5.8"
+socket2 = "0.6.4"
+nix = { version = "0.26", features = ["mman", "sched"] }
+monoio = { version = "0.2.4", features = ["io-uring", "sync"] }
+io-uring = "0.6"
+rustls = "0.23.41"
+rustls-pemfile = "2.2.0"
+httparse = "1.10.1"
+monoio-rustls = "0.4.0"
+rustls-native-certs = "0.8"
+ipnet = "2.12.0"
+hmac = "0.13.0"
+sha2 = "0.11.0"
+base64 = "0.22.1"
+hyper = { version = "1.3", features = ["full"] }
+hyper-util = { version = "0.1", features = ["full"] }
+http-body-util = "0.1"
+reqwest = "0.12"
+lru = "0.18.0"
+
+[dev-dependencies]
+# tests/e2e.rs only: killing rproxy's prefork worker children needs killpg(-pgid), which std
+# doesn't expose. "signal" is not needed by any production code path.
+nix = { version = "0.26", features = ["signal"] }
+tempfile = "3.27.0"
+
+[features]
+# Off by default: a normal build links none of src/cycles.rs. Opt in with
+# `cargo test --release --features cycle_profile -- --ignored --nocapture cycle_profile_report`
+# for a per-call CPU-cycle report of selected hot-path functions (see src/cycles.rs).
+cycle_profile = []
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+opt-level = 3
+debug = true
+
+# Clippy lint policy (2026-08-15, audit follow-up). CI runs `clippy -D warnings`,
+# so anything not listed here that fires will fail the build. The four allows
+# below are PRE-EXISTING, non-machine-fixable style debt from the fast_proxy.rs
+# rewrite (and config.rs's giant parse fn) -- each is a real refactor (10 fns ->
+# async fn, arg-struct extraction, type aliases, or FastRouter Sync). They are
+# allowlisted so `-D warnings` still guards every other lint; new code must not
+# add more.
+#
+# `arc_with_non_send_sync` rationale (verified 2026-08-15): FastRouter is shared
+# via Arc only within ONE worker's single-threaded monoio runtime (prefork, one
+# thread per worker; `.build()`, never `.build_multi_thread()`, see platform.rs
+# and the NOTE on FastRouter in fast_proxy.rs). Cross-thread access is impossible
+# by construction -- the allow must be revisited before any move to a
+# multi-threaded runtime.
+[lints.clippy]
+manual_async_fn = "allow"
+too_many_arguments = "allow"
+type_complexity = "allow"
+arc_with_non_send_sync = "allow"
